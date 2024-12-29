@@ -1,5 +1,5 @@
 <?php
-session_start();
+session_start(); 
 ?>
 <!DOCTYPE html>
 <html>
@@ -11,19 +11,20 @@ session_start();
     <body>
         <h1>Examen 1</h1>
         <form method = "POST">
-            <label for = "row-start">Row START:</label>
+            <label for = "row-start">Fila INICIO:</label>
             <input type = "number" name = "row-start" min = "1" max = "6">
 
-            <label for = "column-start">Column START:</label>
+            <label for = "column-start">Columna INICIO:</label>
             <input type = "number" name = "column-start" min = "1" max = "6">
             <br><br>
-            <label for = "row-end">Row END:</label>
+            <label for = "row-end">Fila FIN:</label>
             <input type = "number" name = "row-end" min = "1" max = "6">
 
-            <label for = "column-end">Column END:</label>
+            <label for = "column-end">Columna FIN:</label>
             <input type = "number" name = "column-end" min = "1" max = "6">
             <br><br>
-            <input type = "submit" value = "submit">
+            <input type = "submit" value = "Prueba">
+            <br><br>
 
         </form>
         <?php
@@ -38,71 +39,69 @@ session_start();
         $numbers = ["1", "2", "3", "4", "5", "6"];
 
         //Donde se guarda las combinaciones//
-        //randomCombos contiene las combinaciones posibles en un array//
-        //randomGrid contiene las combinaciones en un array multidimensional de 6 arrays con 6 elementos casa uno//
-        $randomCombos = [];
-        $randomGrid = [];
+        $combos = []; //combinaciones posibles en un array//
+        $randomGrid = [];//Array multidimensional de 6 arrays con 6 elementos casa uno//
 
-        //Crear funcion para realizar el tablero//
-        //Usar "empty" para ver si "session" está vacío.  Si es asi guardamos el nuevo array, si no, usamos el array guardado en "session"//
-        //Quiero mirar como producir un nuevo orden cuando recargas la página pero mantener el mismo orden cuando le das a "Submit"//
-        function storeRandom($colors, $numbers) {
-            global $randomCombos;
+        //Crear funcion para coger combinaciones posibles de los colores y números//
+        function generarCombinaciones($colors, $numbers) {
+            global $combos;
             global $randomGrid;
-            if (empty($_SESSION['randomGrid'])) {
+            if (empty($_SESSION['randomGrid'])) { //Si "session" está vacío, poner combinaciones en array//
                 foreach ($colors as $color) {
-                    foreach ($numbers as $number) { //para cada color mirar cada número y poner la combinación de los dos en un array//
-                        $randomCombos[] = $number . '-' . $color;
+                    foreach ($numbers as $number) { //Para cada color mirar cada número y poner la combinación de los dos en un array//
+                        $combos[] = $number . '-' . $color;
                     }
                 }
-                shuffle($randomCombos); //crear un órden aleatorio de las combinaciones posibles//
-                $randomGrid = array_chunk($randomCombos,6); //Organizar el array "randomCombos" en un array multidimensional, con 6 elementos cada array//
+                shuffle($combos); //Crear un órden aleatorio de las combinaciones posibles//
+                $randomGrid = array_chunk($combos,6); //Organizar el array "combos" en un array multidimensional, con 6 elementos cada array//
                 $_SESSION['randomGrid'] = $randomGrid;
             } else {
-                $randomGrid = $_SESSION['randomGrid']; //Si ya hay sesión, usa el "randomGrid" ya creado.  Para pulsar "submit" sin cambiar el grid//
+                $randomGrid = $_SESSION['randomGrid']; //Si "session" no está vacío, usar el "randomGrid" ya creado.  Para pulsar "submit" sin cambiar el grid//
             }
         }
-        storeRandom($colors, $numbers);
+        generarCombinaciones($colors, $numbers);
         
         
-        //Función para dibujar el tablero usando un loop//
-        function printTable($randomGrid) {
+        //Función para dibujar la tabla usando un loop//
+        function dibujarTablero($randomGrid) {
+            echo "<table border = 1>"; //crear tabla para que sea más legible//
             for ($i = 0; $i < count($randomGrid); $i++) {
-                echo "<br>";
+                echo "<tr>";
                 for ($j = 0; $j < count($randomGrid[$i]); $j++) {
-                    echo " ". $randomGrid[$i][$j] ." ";
+                    echo "<td> ". $randomGrid[$i][$j] ." </td>";
                 }
+                echo "</tr>";
             }
+            echo "</table>";
         }
-        printTable($randomGrid);
+        dibujarTablero($randomGrid);
 
         //función para ver si una tirada está permitida usando los variables del form//
         //Si falta alguna entrada, si las entradas no causan cambio de posición, o si las entradas causan un movimiento que no sea vertical o horizontal, da "NO PERMITIDO"//
-        function checkMoveAllowance($rowStart, $columnStart, $rowEnd, $columnEnd) {
+        function tiradaPermitida($rowStart, $columnStart, $rowEnd, $columnEnd) {
             
             if (!is_numeric($rowStart) || !is_numeric($rowEnd) || !is_numeric($columnStart) || !is_numeric($columnEnd)) {
-                echo "<br><br>Tirada NO PERMITIDA";
+                echo "<br>Tirada NO PERMITIDA";
             } elseif ($rowStart === $rowEnd && $columnStart === $columnEnd) {
-                echo "<br><br>Tirada NO PERMITIDA";
+                echo "<br>Tirada NO PERMITIDA";
             } elseif ($rowStart === $rowEnd || $columnStart === $columnEnd) {
-                echo "<br><br>Tirada PERMITIDA<br>";
-                checkMoveValidity($rowStart, $columnStart, $rowEnd, $columnEnd);
+                echo "<br>Tirada PERMITIDA<br>";
+                tiradaValida($rowStart, $columnStart, $rowEnd, $columnEnd); // Llamar solo si la tirada está permitida//
             } else {
-                echo "<br><br>Tirada NO PERMITIDA";
+                echo "<br>Tirada NO PERMITIDA";
             }
         }
-        checkMoveAllowance($rowStart, $columnStart, $rowEnd, $columnEnd);
+        tiradaPermitida($rowStart, $columnStart, $rowEnd, $columnEnd);
 
         //función para ver validez de la tirada//
-        //Si 
-        function checkMoveValidity($rowStart, $columnStart, $rowEnd, $columnEnd) {
+        function tiradaValida($rowStart, $columnStart, $rowEnd, $columnEnd) {
             global $randomGrid;
             $start = $randomGrid[$rowStart - 1][$columnStart - 1]; //Asignar variables al array. Menos uno porque el índice empieza con 0//
             $end = $randomGrid[$rowEnd - 1][$columnEnd - 1];
 
             if (strpos($start, "1")!==false && strpos($end, "1")!==false) { //"strpos" encuentra substring dentro de un string//
                 echo "Tirada VÁLIDA";
-            } elseif (strpos($start, "2")!==false && strpos($end, "2")!==false) { 
+            } elseif (strpos($start, "2")!==false && strpos($end, "2")!==false) { //Cuando "strpos" NO encuentra el substring, da "false"//
                 echo "Tirada VÁLIDA";
             } elseif (strpos($start, "3")!==false && strpos($end, "3")!==false) { 
                 echo "Tirada VÁLIDA";
